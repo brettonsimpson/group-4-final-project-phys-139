@@ -1,0 +1,83 @@
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Conv1D, Flatten, MaxPooling1D, ReLU, BatchNormalization, Softmax
+
+# Define the model
+model = Sequential([
+    # Convolutional Block 1
+    Conv1D(filters=32, kernel_size=3, padding='same', input_shape=(16384, 1)),
+    ReLU(),
+    BatchNormalization(),
+    Conv1D(filters=32, kernel_size=3, padding='same'),
+    ReLU(),
+    BatchNormalization(),
+    
+    # Convolutional Block 2
+    Conv1D(filters=64, kernel_size=3, padding='same'),
+    ReLU(),
+    BatchNormalization(),
+    Conv1D(filters=64, kernel_size=3, padding='same'),
+    ReLU(),
+    BatchNormalization(),
+
+    # Convolutional Block 3
+    Conv1D(filters=128, kernel_size=3, padding='same'),
+    ReLU(),
+    BatchNormalization(),
+    Conv1D(filters=128, kernel_size=3, padding='same'),
+    ReLU(),
+    BatchNormalization(),
+
+    # Convolutional Block 4
+    Conv1D(filters=256, kernel_size=3, padding='same'),
+    ReLU(),
+    BatchNormalization(),
+    Conv1D(filters=256, kernel_size=3, padding='same'),
+    ReLU(),
+    BatchNormalization(),
+    MaxPooling1D(pool_size=4, strides=4),
+
+    # Flatten the output
+    Flatten(),
+
+    # Dense blocks
+    Dense(128),
+    ReLU(),
+    Dense(64),
+    ReLU(),
+    BatchNormalization(),
+
+    # Output layer
+    Dense(4),
+    Softmax()
+])
+
+# Compile the model
+
+import numpy as np
+import tensorflow as tf
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
+
+# Example data loading
+# Let's assume your data is loaded as a NumPy array from a file (replace with your actual data loading code)
+data = np.load()
+labels = np.load()  # Make sure labels are one-hot encoded if necessary
+
+
+#data = data.reshape((data.shape[0], data.shape[1], 1))  # Assuming data.shape[1] is the time series length
+
+# Normalize data
+scaler = MinMaxScaler(feature_range=(0, 1))
+data_scaled = scaler.fit_transform(data.reshape(-1, data.shape[1])).reshape(data.shape)
+
+# Split data into training and testing
+X_train, X_test, y_train, y_test = train_test_split(data_scaled, labels, test_size=0.2, random_state=42)
+
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Train the model
+model.fit(X_train, y_train, epochs=10, batch_size=32, validation_data=(X_test, y_test))
+
+# Optionally, evaluate the model
+model.evaluate(X_test, y_test)
